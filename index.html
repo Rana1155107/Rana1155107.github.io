@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mohammad Shohel Rana — Computational Fluid Dynamics &amp; SciML</title>
+<meta name="description" content="Personal academic site of Mohammad Shohel Rana, MSc student in Applied Mathematics and Computational Science, North South University. Research in CFD, turbulence modeling, and scientific machine learning." />
+
+<style>
+/* =========================================================
+   Mohammad Shohel Rana — personal academic site
+   Design language: a working scientific notebook.
+   Paper ground, ink text, two accents borrowed straight
+   from CFD colour convention: prussian blue for the "field",
+   vermilion/copper for the "vorticity" highlight.
+   ========================================================= */
+
+:root {
+  --paper: #f2f1ec;
+  --paper-alt: #e9e6dc;
+  --ink: #182027;
+  --ink-soft: #4a5560;
+  --ink-faint: #8a8f88;
+  --line: #d9d4c6;
+  --prussian: #204a5e;
+  --prussian-soft: #3d7188;
+  --vortex: #bd5a2e;
+  --vortex-soft: #d98455;
+
+  --serif: "Times New Roman", Times, serif;
+  --sans: "Times New Roman", Times, serif;
+  --mono: "Times New Roman", Times, serif;
+
+  --max: 1080px;
+  --edge: clamp(1.25rem, 4vw, 3.5rem);
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--prussian);
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+a:hover { color: var(--vortex); }
+
+h1, h2, h3, h4 {
+  font-family: var(--serif);
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 0.5em;
+  letter-spacing: -0.01em;
+}
+
+.wrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding-left: var(--edge);
+  padding-right: var(--edge);
+}
+
+/* ---------- nav ---------- */
+
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(242, 241, 236, 0.88);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+
+.site-nav .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.nav-mark {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nav-mark strong { color: var(--vortex); }
+
+.nav-links {
+  display: flex;
+  gap: clamp(0.9rem, 2vw, 1.75rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 0.3rem 0;
+  border-bottom: 2px solid transparent;
+}
+.nav-links a:hover {
+  color: var(--ink);
+  border-bottom-color: var(--vortex);
+}
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  width: 40px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.nav-toggle span,
+.nav-toggle span::before,
+.nav-toggle span::after {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--ink);
+  position: relative;
+}
+.nav-toggle span::before { position: absolute; top: -6px; }
+.nav-toggle span::after { position: absolute; top: 6px; }
+
+@media (max-width: 720px) {
+  .nav-links {
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    flex-direction: column;
+    padding: 1rem var(--edge) 1.5rem;
+    display: none;
+    gap: 1rem;
+  }
+  .nav-links.open { display: flex; }
+  .nav-toggle { display: inline-flex; }
+}
+
+/* ---------- hero ---------- */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.hero-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+
+.hero-field .streamline {
+  fill: none;
+  stroke: var(--prussian-soft);
+  stroke-width: 1.4;
+  stroke-dasharray: 6 10;
+  animation: flow 14s linear infinite;
+  opacity: 0.55;
+}
+.hero-field .streamline:nth-child(odd) { animation-duration: 18s; opacity: 0.4; }
+.hero-field .cyl { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; opacity: 0.85; }
+.hero-field .tick { stroke: var(--vortex-soft); stroke-width: 2; opacity: 0.7; }
+
+@keyframes flow {
+  to { stroke-dashoffset: -160; }
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  padding: clamp(3.5rem, 9vw, 6.5rem) 0 clamp(2.5rem, 6vw, 4rem);
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--vortex);
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  line-height: 1.04;
+  max-width: 16ch;
+}
+
+.hero .role {
+  font-family: var(--sans);
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  color: var(--ink-soft);
+  max-width: 46ch;
+  margin: 1.1rem 0 1.6rem;
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.hero-meta span::before {
+  content: "\2013\00a0";
+  color: var(--ink-faint);
+}
+.hero-meta span:first-child::before { content: ""; }
+
+.hero-links {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  padding: 0.65rem 1.1rem;
+  border-radius: 3px;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn.primary { background: var(--prussian); border-color: var(--prussian); color: var(--paper); }
+.btn.primary:hover { background: var(--vortex); border-color: var(--vortex); }
+
+/* ---------- sections ---------- */
+
+section {
+  padding: clamp(3rem, 7vw, 5rem) 0;
+}
+
+section:nth-of-type(even) {
+  background: rgba(233, 230, 220, 0.93);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 2.2rem;
+  flex-wrap: wrap;
+}
+
+.section-head .tag {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--vortex);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.section-head h2 {
+  font-size: clamp(1.6rem, 3.2vw, 2.1rem);
+  margin: 0;
+}
+
+.section-intro {
+  max-width: 68ch;
+  color: var(--ink-soft);
+  margin: -1rem 0 2rem;
+}
+
+/* about */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+.about-grid p { color: var(--ink-soft); margin: 0 0 1rem; }
+.about-grid p:last-child { margin-bottom: 0; }
+
+.fact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.fact-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+.fact-list dt, .fact-list .k {
+  font-family: var(--mono);
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  padding-top: 0.2rem;
+  white-space: nowrap;
+}
+.fact-list .v { text-align: right; color: var(--ink); }
+
+/* interest cards */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.card {
+  background: rgba(242, 241, 236, 0.93);
+  padding: 1.6rem 1.5rem;
+}
+section:nth-of-type(even) .card { background: rgba(233, 230, 220, 0.93); }
+.card .num {
+  font-family: var(--mono);
+  color: var(--vortex);
+  font-size: 0.8rem;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+.card h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+}
+.card p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; }
+
+@media (max-width: 860px) {
+  .card-grid { grid-template-columns: 1fr 1fr; }
+  .about-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .card-grid { grid-template-columns: 1fr; }
+}
+
+/* research entries */
+.entry {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 1.5rem;
+  padding: 1.8rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.entry:first-child { padding-top: 0; }
+.entry:last-child { border-bottom: none; }
+
+.entry .status {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--prussian-soft);
+  padding-top: 0.3rem;
+}
+.entry .status.done { color: var(--ink-faint); }
+
+.entry h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.35rem;
+}
+.entry p {
+  color: var(--ink-soft);
+  margin: 0 0 0.6rem;
+  max-width: 68ch;
+}
+.entry .tools {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+.entry .tools em { font-style: normal; color: var(--ink-soft); }
+
+.figure-slot {
+  margin-top: 1.1rem;
+  aspect-ratio: 16 / 9;
+  max-width: 560px;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  background: rgba(233, 230, 220, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 1rem;
+  text-align: center;
+}
+section:nth-of-type(even) .figure-slot { background: rgba(242, 241, 236, 0.5); }
+.figure-slot .fig-num {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--vortex);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.figure-slot .fig-caption {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  max-width: 34ch;
+}
+.figure-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+@media (max-width: 640px) {
+  .entry { grid-template-columns: 1fr; gap: 0.4rem; }
+}
+
+/* project chip list */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.6rem;
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  color: var(--ink-soft);
+  background: rgba(242, 241, 236, 0.93);
+}
+section:nth-of-type(even) .chip { background: rgba(233, 230, 220, 0.93); }
+
+/* publications */
+.pub {
+  border-left: 3px solid var(--prussian);
+  padding: 0.3rem 0 0.3rem 1.2rem;
+  margin-bottom: 1.6rem;
+}
+.pub.pending { border-left-color: var(--vortex); }
+.pub .pub-status {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vortex);
+}
+.pub.pending .pub-status { color: var(--vortex); }
+.pub h3 { font-size: 1.05rem; margin: 0.3rem 0 0.3rem; }
+.pub p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; }
+
+/* skills */
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+.skill-block .k {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  margin-bottom: 0.7rem;
+  display: block;
+}
+.skill-block .chip-row { margin-top: 0; }
+@media (max-width: 640px) {
+  .skill-grid { grid-template-columns: 1fr; }
+}
+
+/* timeline (education/experience) */
+.timeline {
+  border-top: 1px solid var(--line);
+}
+.tl-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.tl-row .when {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+.tl-row h3 { font-size: 1.05rem; margin-bottom: 0.2rem; }
+.tl-row .org { color: var(--ink-soft); font-size: 0.92rem; margin-bottom: 0.4rem; }
+.tl-row p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; }
+@media (max-width: 640px) {
+  .tl-row { grid-template-columns: 1fr; gap: 0.3rem; }
+}
+
+/* awards */
+.award-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 2;
+  column-gap: 3rem;
+}
+.award-list li {
+  break-inside: avoid;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+}
+.award-list li strong { color: var(--ink); font-weight: 600; }
+@media (max-width: 640px) { .award-list { columns: 1; } }
+
+/* contact */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+.contact-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.contact-links li {
+  border-bottom: 1px solid var(--line);
+}
+.contact-links a {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.9rem 0;
+  text-decoration: none;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.9rem;
+}
+.contact-links a span.arrow { color: var(--vortex); }
+.contact-links a:hover { color: var(--vortex); }
+@media (max-width: 720px) { .contact-grid { grid-template-columns: 1fr; } }
+
+/* ---------- equation watermark ---------- */
+
+.equation-watermark {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.equation-watermark span {
+  position: absolute;
+  white-space: nowrap;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--ink);
+  opacity: 0.055;
+  transform: rotate(-18deg);
+}
+
+.equation-watermark .eq1 { top: 8%;  left: -4%;  font-size: clamp(1.1rem, 2.6vw, 1.9rem); }
+.equation-watermark .eq2 { top: 34%; left: 42%;  font-size: clamp(1.1rem, 2.6vw, 1.9rem); }
+.equation-watermark .eq3 { top: 60%; left: -6%;  font-size: clamp(1.1rem, 2.6vw, 1.9rem); }
+.equation-watermark .eq4 { top: 86%; left: 38%;  font-size: clamp(1.1rem, 2.6vw, 1.9rem); }
+.equation-watermark .eq5 { top: 20%; left: 70%;  font-size: clamp(1.1rem, 2.6vw, 1.9rem); }
+.equation-watermark .eq6 { top: 72%; left: 66%;  font-size: clamp(1.1rem, 2.6vw, 1.9rem); }
+
+.site-nav, .hero, section, footer {
+  position: relative;
+  z-index: 1;
+}
+
+footer {
+  padding: 2.2rem var(--edge);
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
+</style>
+</head>
+<body>
+
+<div class="equation-watermark" aria-hidden="true">
+  <span class="eq1">&part;u/&part;t + (u&middot;&nabla;)u = &minus;(1/&rho;)&nabla;p + &nu;&nabla;&sup2;u + f</span>
+  <span class="eq2">&nabla;&middot;u = 0</span>
+  <span class="eq3">&rho;c<sub>p</sub>(&part;T/&part;t + u&middot;&nabla;T) = k&nabla;&sup2;T + &Phi;</span>
+  <span class="eq4">&part;u/&part;t + (u&middot;&nabla;)u = &minus;(1/&rho;)&nabla;p + &nu;&nabla;&sup2;u + f</span>
+  <span class="eq5">&nabla;&middot;u = 0</span>
+  <span class="eq6">&rho;c<sub>p</sub>(&part;T/&part;t + u&middot;&nabla;T) = k&nabla;&sup2;T + &Phi;</span>
+</div>
+
+<nav class="site-nav">
+  <div class="wrap">
+    <a class="nav-mark" href="#top">Mohammad Shohel <strong>Rana</strong></a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#research">Research</a></li>
+      <li><a href="#publications">Publications</a></li>
+      <li><a href="#background">Background</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <svg class="hero-field" viewBox="0 0 1080 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path class="streamline" d="M -40 90 C 200 90, 260 30, 340 60 C 420 90, 420 140, 500 150 C 600 165, 640 90, 740 100 C 860 112, 920 60, 1120 70" />
+    <path class="streamline" d="M -40 150 C 220 150, 250 100, 330 120 C 410 140, 400 190, 480 210 C 580 235, 650 160, 760 165 C 880 170, 930 130, 1120 140" />
+    <path class="streamline" d="M -40 210 C 240 210, 260 180, 330 190 C 400 200, 390 230, 470 260 C 570 295, 660 230, 780 232 C 900 234, 940 205, 1120 215" />
+    <path class="streamline" d="M -40 270 C 240 270, 270 300, 330 292 C 400 283, 400 250, 470 240" />
+    <path class="streamline" d="M -40 330 C 220 330, 260 350, 340 330 C 420 310, 420 270, 500 260 C 600 248, 650 300, 760 305 C 880 310, 930 345, 1120 335" />
+    <path class="streamline" d="M -40 390 C 210 390, 250 420, 330 400 C 410 380, 410 340, 490 335 C 590 328, 650 375, 760 380 C 880 385, 930 410, 1120 400" />
+    <ellipse class="cyl" cx="330" cy="190" rx="26" ry="52" transform="rotate(18 330 190)" />
+    <ellipse class="cyl" cx="470" cy="255" rx="26" ry="52" transform="rotate(18 470 255)" />
+    <line class="tick" x1="330" y1="130" x2="330" y2="150" />
+    <line class="tick" x1="470" y1="195" x2="470" y2="215" />
+  </svg>
+
+  <div class="hero-inner wrap">
+    <span class="eyebrow">MSc · Applied Mathematics &amp; Computational Science</span>
+    <h1>Mohammad Shohel Rana</h1>
+    <p class="role">I study unsteady, non-Newtonian fluid flows using high-fidelity CFD and physics-informed machine learning — with an eye toward turbulence closure and wall-modeled LES.</p>
+    <div class="hero-meta">
+      <span>North South University, Dhaka</span>
+      <span>Graduate Teaching &amp; Research Assistant</span>
+      <span>Prev. BSc Mechanical Eng., SUST</span>
+    </div>
+    <div class="hero-links">
+      <a class="btn primary" href="mailto:shohel39.sust@gmail.com">Email me</a>
+      <a class="btn" href="https://github.com/Rana1155107" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn" href="https://linkedin.com/in/shohel-rana2016339039" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>
+</header>
+
+<section id="about">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">01 — About</span>
+      <h2>Bridging mechanics and computation</h2>
+    </div>
+    <div class="about-grid">
+      <div>
+        <p>I'm an MSc student in Applied Mathematics and Computational Science at North South University (NSU), Dhaka, where I also work as a Graduate Teaching and Research Assistant. My background bridges mechanical engineering and applied mathematics: a BSc in Mechanical Engineering from Shahjalal University of Science and Technology (SUST), followed by graduate coursework in PDEs, numerical methods, and high-performance computing.</p>
+        <p>My research centers on computational fluid dynamics and heat transfer — most recently, pulsatile flow around tandem elliptic cylinders in power-law fluids — approached through both classical finite-volume/finite-element solvers and physics-informed neural networks. I'm drawn to problems where data-driven methods and first-principles physics have to work together, particularly in turbulence modeling and reduced-order flow representation.</p>
+        <p>I'm currently preparing PhD applications in Mechanical Engineering, with a particular interest in turbulence closure, wall-modeled LES, and data-driven approaches to complex flows.</p>
+      </div>
+      <ul class="fact-list">
+        <li><span class="k">Based in</span><span class="v">Dhaka, Bangladesh</span></li>
+        <li><span class="k">Role</span><span class="v">Graduate TA &amp; RA, NSU</span></li>
+        <li><span class="k">MSc CGPA</span><span class="v">3.93 (through 3rd semester)</span></li>
+        <li><span class="k">BSc CGPA</span><span class="v">3.59 · Class Rank 3rd</span></li>
+        <li><span class="k">Tools</span><span class="v">COMSOL, ANSYS Fluent, Python</span></li>
+        <li><span class="k">Seeking</span><span class="v">PhD in Mechanical Engineering</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="interests">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">02 — Focus</span>
+      <h2>Research interests</h2>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <span class="num">i</span>
+        <h3>Computational Fluid Dynamics</h3>
+        <p>High-fidelity simulation of internal, external, and biomedical flows using finite volume and finite element methods.</p>
+      </div>
+      <div class="card">
+        <span class="num">ii</span>
+        <h3>Turbulence Modeling &amp; Control</h3>
+        <p>Closure modeling and scale-resolving methods, from RANS through LES and DNS.</p>
+      </div>
+      <div class="card">
+        <span class="num">iii</span>
+        <h3>Scientific ML &amp; HPC</h3>
+        <p>Physics-informed neural networks and parallel computing (OpenMP, MPI, CUDA) for large-scale flow problems.</p>
+      </div>
+      <div class="card">
+        <span class="num">iv</span>
+        <h3>Physics-Informed, Data-Driven Flow</h3>
+        <p>Coupling governing equations with learned models for forward simulation and inverse parameter discovery.</p>
+      </div>
+      <div class="card">
+        <span class="num">v</span>
+        <h3>Numerical Methods &amp; Simulation</h3>
+        <p>Reduced-order modeling via POD and DMD to extract coherent structures from unsteady flow fields.</p>
+      </div>
+      <div class="card">
+        <span class="num">vi</span>
+        <h3>Heat &amp; Mass Transfer</h3>
+        <p>Forced and mixed convection, conjugate heat transfer, and magnetohydrodynamic flow-thermal coupling.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="research">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">03 — Ongoing</span>
+      <h2>Current research</h2>
+    </div>
+    <p class="section-intro">Active projects, in progress or under preparation for submission.</p>
+
+    <div class="entry">
+      <span class="status">In prep</span>
+      <div>
+        <h3>Pulsatile Flow &amp; Forced Convection Around Tandem Elliptic Cylinders</h3>
+        <p>A power-law fluid model of unsteady flow and heat transfer past tandem inclined elliptic cylinders in a channel, studied across five one-factor-at-a-time cases: Reynolds number, orientation angle, power-law index, gap ratio, and pulsation frequency. Reduced-order analysis via POD and DMD characterizes the dominant unsteady structures.</p>
+        <p class="tools">Tools — <em>COMSOL Multiphysics, POD/DMD, LaTeX</em></p>
+        <div class="figure-slot">
+          <span class="fig-num">Fig. 1 — placeholder</span>
+          <span class="fig-caption">Add a flow/streamline or contour plot from the tandem-cylinder case studies here.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="status">In prep</span>
+      <div>
+        <h3>A Physics-Informed Neural Network Framework for the Same Flow Problem</h3>
+        <p>A parallel PINN (P-PINN) architecture for both forward modeling and inverse parameter discovery on the tandem-cylinder pulsatile-flow problem — recovering unknown flow and material parameters directly from sparse observations.</p>
+        <p class="tools">Tools — <em>Python, PyTorch-style PINNs, matplotlib</em></p>
+        <div class="figure-slot">
+          <span class="fig-num">Fig. 2 — placeholder</span>
+          <span class="fig-caption">Add the P-PINN architecture diagram or a predicted-vs-simulated field comparison here.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="status">Ongoing</span>
+      <div>
+        <h3>Aerodynamic Analysis of Cylindrical Objects with POD and DMD</h3>
+        <p>High-fidelity CFD simulations of circular and elliptic cylinders, using Proper Orthogonal Decomposition and Dynamic Mode Decomposition to extract dominant flow structures and investigate reduced-order representations of unsteady, vortex-dominated flows.</p>
+        <p class="tools">Tools — <em>Finite Volume &amp; Finite Element solvers</em></p>
+        <div class="figure-slot">
+          <span class="fig-num">Fig. 3 — placeholder</span>
+          <span class="fig-caption">Add a POD/DMD mode shape or vortex-shedding visualization here.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:3rem;">
+      <span class="tag">Completed</span>
+      <h2 style="font-size:1.4rem;">Earlier research</h2>
+    </div>
+
+    <div class="entry">
+      <span class="status done">Under review</span>
+      <div>
+        <h3>Conjugate MHD Mixed Convection of a Hybrid Ferrofluid</h3>
+        <p>A finite-element model of magnetohydrodynamic mixed convection in a dilated cavity with rotating cylinders, examining how Hartmann number, Reynolds number, and thermal parameters shape the coupled flow and heat transfer behavior.</p>
+        <p class="tools">Status — <em>manuscript under review, Physica Scripta</em></p>
+        <div class="figure-slot">
+          <span class="fig-num">Fig. 4 — placeholder</span>
+          <span class="fig-caption">Add a streamline/isotherm plot from the MHD ferrofluid cavity study here.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="entry">
+      <span class="status done">Complete</span>
+      <div>
+        <h3>Supervised Machine Learning for Heat Transfer Prediction</h3>
+        <p>Supervised ML models trained on CFD-generated thermal-fluid datasets to predict heat transfer characteristics, with feature engineering and model validation forming a data-driven framework for thermal system modeling.</p>
+        <div class="figure-slot">
+          <span class="fig-num">Fig. 5 — placeholder</span>
+          <span class="fig-caption">Add a predicted-vs-actual scatter plot or feature-importance chart here.</span>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-top:2rem; color:var(--ink-soft);">Additional CFD coursework and side projects:</p>
+    <div class="chip-row">
+      <span class="chip">Supersonic flow over a wedge</span>
+      <span class="chip">Carotid artery blood flow</span>
+      <span class="chip">NACA 2412 / 2415 airfoil analysis</span>
+      <span class="chip">Steady &amp; unsteady flow past a cylinder</span>
+    </div>
+  </div>
+</section>
+
+<section id="publications">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">04 — Publications</span>
+      <h2>Manuscripts</h2>
+    </div>
+
+    <div class="pub pending">
+      <span class="pub-status">Under review</span>
+      <h3>Conjugate MHD Mixed Convection of Hybrid Ferrofluid in a Dilated Cavity with Rotating Cylinders</h3>
+      <p>Physica Scripta.</p>
+      <div class="figure-slot">
+        <span class="fig-num">Fig. — placeholder</span>
+        <span class="fig-caption">Add a key result figure or graphical abstract from this manuscript here.</span>
+      </div>
+    </div>
+
+    <div class="pub pending">
+      <span class="pub-status">In preparation</span>
+      <h3>Pulsatile Flow and Forced Convection Around Tandem Elliptic Cylinders in a Power-Law Fluid: A PINN and POD/DMD Study</h3>
+      <p>Manuscript in preparation.</p>
+      <div class="figure-slot">
+        <span class="fig-num">Fig. — placeholder</span>
+        <span class="fig-caption">Add a key result figure or graphical abstract from this manuscript here.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="background">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">05 — Background</span>
+      <h2>Education &amp; experience</h2>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-row">
+        <span class="when">2025 — Present</span>
+        <div>
+          <h3>MSc, Applied Mathematics &amp; Computational Science</h3>
+          <p class="org">North South University, Dhaka</p>
+          <p>CGPA 3.93 (through 3rd semester). Coursework: CFD (RANS/LES/DNS), HPC (OpenMP/MPI/CUDA), PDEs, computational linear algebra, advanced numerical methods.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <span class="when">2025 — Present</span>
+        <div>
+          <h3>Graduate Teaching &amp; Research Assistant</h3>
+          <p class="org">North South University, Dhaka</p>
+          <p>CFD-based research on heat and mass transfer using ANSYS Fluent and COMSOL Multiphysics; applies data-driven and ML methods to simulation data; supports faculty with proctoring, grading, and manuscript preparation.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <span class="when">2023 — 2025</span>
+        <div>
+          <h3>Lecturer of Mathematics</h3>
+          <p class="org">Women's Model College, Sylhet</p>
+          <p>Taught higher secondary mathematics; developed course materials and assessment strategies.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <span class="when">2017 — 2021</span>
+        <div>
+          <h3>BSc, Mechanical Engineering</h3>
+          <p class="org">Shahjalal University of Science and Technology (SUST), Sylhet</p>
+          <p>CGPA 3.59, Class Rank 3rd. Undergraduate thesis: molecular dynamics simulation of grain-size effects on the mechanical behavior of FCC Cu–Ni binary alloy.</p>
+        </div>
+      </div>
+      <div class="tl-row">
+        <span class="when">2019 — 2020</span>
+        <div>
+          <h3>Trainee, Mechanical Maintenance Department</h3>
+          <p class="org">Energypac Engineering Ltd.</p>
+          <p>Hands-on experience with transformers, their manufacturing process, and industrial maintenance equipment.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="skill-grid" style="margin-top:3rem;">
+      <div class="skill-block">
+        <span class="k">Engineering software</span>
+        <div class="chip-row">
+          <span class="chip">ANSYS Fluent</span>
+          <span class="chip">COMSOL Multiphysics</span>
+          <span class="chip">SolidWorks</span>
+          <span class="chip">Tecplot 360</span>
+        </div>
+      </div>
+      <div class="skill-block">
+        <span class="k">Programming &amp; computing</span>
+        <div class="chip-row">
+          <span class="chip">Python</span>
+          <span class="chip">MATLAB</span>
+          <span class="chip">OpenMP</span>
+          <span class="chip">MPI</span>
+          <span class="chip">CUDA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:3rem;">
+      <span class="tag">Awards</span>
+      <h2 style="font-size:1.4rem;">Awards, certifications &amp; scholarships</h2>
+    </div>
+    <ul class="award-list">
+      <li><strong>Bronze Medal</strong> — University Physics Olympiad, 2019</li>
+      <li><strong>Merit Scholarship</strong> — SUST, 2018–2020</li>
+      <li><strong>Education Board Scholarship</strong> — 2009</li>
+      <li><strong>Poster Presentation</strong> — "Future Realistic Implementation of Renewable Energy Sources in Bangladesh," Mechnovation 2017</li>
+      <li><strong>Mechanical CAD Designer</strong> — Mechnovation 2018</li>
+      <li><strong>Certificate</strong> — A Hands-on Introduction to Engineering Simulations, Cornell University (edX)</li>
+      <li><strong>Certified Associate (CSWA)</strong> — SolidWorks, Udemy</li>
+      <li><strong>Certified Professional (CSWP)</strong> — SolidWorks, Udemy</li>
+    </ul>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">06 — Contact</span>
+      <h2>Get in touch</h2>
+    </div>
+    <div class="contact-grid">
+      <p style="color:var(--ink-soft); max-width:52ch;">Open to conversations about CFD, turbulence modeling, scientific machine learning, and PhD opportunities in mechanical engineering. The fastest way to reach me is email.</p>
+      <ul class="contact-links">
+        <li><a href="mailto:shohel39.sust@gmail.com">Email <span class="arrow">shohel39.sust@gmail.com →</span></a></li>
+        <li><a href="https://github.com/Rana1155107" target="_blank" rel="noopener">GitHub <span class="arrow">Rana1155107 →</span></a></li>
+        <li><a href="https://linkedin.com/in/shohel-rana2016339039" target="_blank" rel="noopener">LinkedIn <span class="arrow">shohel-rana2016339039 →</span></a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Mohammad Shohel Rana — Dhaka, Bangladesh
+</footer>
+
+<script>
+// Mobile nav toggle
+const navToggle = document.getElementById('navToggle');
+const navLinks = document.getElementById('navLinks');
+
+if (navToggle && navLinks) {
+  navToggle.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  navLinks.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+}
+
+</script>
+</body>
+</html>
